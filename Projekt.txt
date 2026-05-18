@@ -1,0 +1,10 @@
+Na razie brak terminu
+Projekt 2-osobowy (MOŻNA 3, ale wtedy najlepiej mieć więcej funkcjonalności)
+
+Coś w podobieństwie którejś aplikacji AISpace.
+Prosta dokumentacja: przeznaczenie (czego uczy aplikacja?), lista funkcjonalności (w tym również to co może nie udało się).
+Nie trzeba robić całości od zera; można zaadaptować publiczny kod, ale trzeba to dopasować do potrzeb aplikacji, m.in. szczególnie pokazanie działania algorytmu.
+Nie musi to być rozbudowane, wystarczy coś dedykowanego np. działa tylko dla jednego algorytmu; 
+
+Można użyć czyjegoś kodu, ALE ten kod ma być w aplikacji, a nie tylko linijka kodu wzywająca biblotekę.
+Sam projekt to ~25% punktów z zajęć, więc program nie musi być bardzo rozbudowany.

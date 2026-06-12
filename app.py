@@ -150,6 +150,31 @@ def rysuj_porownanie(podsumowanie):
     return fig
 
 
+def rysuj_frontier_w_czasie(kroki, biezacy_krok=None):
+    
+    fig, ax = plt.subplots(figsize=(8, 3))
+
+    numery = [k["krok"] for k in kroki]
+    rozmiary = [len(k["frontier"]) for k in kroki]
+
+    ax.plot(numery, rozmiary, marker="o", markersize=4,
+            color="#8e44ad", linewidth=1.6)
+    ax.fill_between(numery, rozmiary, color="#8e44ad", alpha=0.12)
+
+    if biezacy_krok is not None:
+        ax.axvline(biezacy_krok, color="#e67e22", linestyle="--",
+                   linewidth=1.4, label=f"krok {biezacy_krok}")
+        ax.legend(fontsize=8, loc="upper right")
+
+    ax.set_xlabel("Krok algorytmu")
+    ax.set_ylabel("Rozmiar frontiera")
+    ax.set_title("Rozmiar frontiera w czasie (zużycie pamięci)")
+    ax.grid(True, linestyle="--", alpha=0.4)
+    ax.margins(x=0.01)
+    plt.tight_layout()
+    return fig
+
+
 #  SEKCJA 2. Przykładowy graf — wczytywany z pliku JSON obok app.py
 
 # Ścieżka do pliku z przykładowym grafem (w tym samym folderze co app.py).
@@ -368,6 +393,11 @@ with kol1:
     fig = rysuj_graf(G, wyniki["start"] if wyniki else start,
                      wyniki["goal"] if wyniki else goal, aktualny_stan)
     st.pyplot(fig)
+
+    # Wykres pomocniczy: jak rósł/malał frontier w trakcie przeszukiwania.
+    if wyniki and wyniki["kroki"]:
+        biezacy = aktualny_stan["krok"] if aktualny_stan else None
+        st.pyplot(rysuj_frontier_w_czasie(wyniki["kroki"], biezacy))
 
 with kol2:
     if wyniki and wyniki["kroki"] and aktualny_stan is not None:

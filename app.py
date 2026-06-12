@@ -85,7 +85,8 @@ def porownaj_strategie(G, start, goal, tryb, limit):
 
         if not kroki:
             podsumowanie.append({"nazwa": nazwa, "kroki": 0, "rozwiniete": 0,
-                                 "koszt": None, "found": False})
+                                 "koszt": None, "dlugosc_sciezki": None,
+                                 "found": False})
             continue
 
         ostatni = kroki[-1]

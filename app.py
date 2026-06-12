@@ -68,6 +68,88 @@ def rysuj_graf(G, start, goal, stan=None):
     return fig
 
 
+def porownaj_strategie(G, start, goal, tryb, limit):
+    """
+    Uruchamia WSZYSTKIE zarejestrowane strategie na tym samym grafie
+    (te same start/goal/tryb/limit) i zwraca dla każdej zebrane metryki:
+    liczbę kroków, liczbę rozwiniętych węzłów oraz koszt g znalezionej ścieżki.
+    """
+    podsumowanie = []
+    for nazwa in sorted(STRATEGIE.keys()):
+        strat = STRATEGIE[nazwa]
+        try:
+            kroki = list(strat.przeszukaj(G, start, goal, tryb, limit))
+        except Exception as e:
+            podsumowanie.append({"nazwa": nazwa, "blad": str(e)})
+            continue
+
+        if not kroki:
+            podsumowanie.append({"nazwa": nazwa, "kroki": 0, "rozwiniete": 0,
+                                 "koszt": None, "found": False})
+            continue
+
+        ostatni = kroki[-1]
+        krok_celu = next((k for k in kroki if k["status"] == "found"), None)
+        podsumowanie.append({
+            "nazwa": nazwa,
+            "kroki": ostatni["krok"],
+            "rozwiniete": len(ostatni["rozwiniete"]),
+            "koszt": krok_celu["g"] if krok_celu else None,
+            "found": krok_celu is not None,
+        })
+    return podsumowanie
+
+
+def rysuj_porownanie(podsumowanie):
+    """
+    Wykres słupkowy porównujący strategie:
+      - po lewej efektywność (liczba kroków i rozwiniętych węzłów),
+      - po prawej jakość (koszt g znalezionej ścieżki; 'brak' = nie znaleziono).
+    """
+    ok = [w for w in podsumowanie if "blad" not in w]
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
+
+    if not ok:
+        for ax in (ax1, ax2):
+            ax.text(0.5, 0.5, "Brak wyników do porównania.",
+                    ha="center", va="center")
+            ax.axis("off")
+        plt.tight_layout()
+        return fig
+
+    nazwy = [w["nazwa"] for w in ok]
+    kroki = [w["kroki"] for w in ok]
+    rozw = [w["rozwiniete"] for w in ok]
+    koszty = [w["koszt"] if w["koszt"] is not None else 0 for w in ok]
+    x = list(range(len(nazwy)))
+    szer = 0.38
+
+    ax1.bar([i - szer / 2 for i in x], kroki, szer,
+            label="Liczba kroków", color="#2980b9")
+    ax1.bar([i + szer / 2 for i in x], rozw, szer,
+            label="Rozwinięte węzły", color="#27ae60")
+    ax1.set_xticks(x)
+    ax1.set_xticklabels(nazwy, rotation=20, ha="right", fontsize=8)
+    ax1.set_title("Efektywność (koszt obliczeń)")
+    ax1.legend(fontsize=8)
+    ax1.grid(True, axis="y", linestyle="--", alpha=0.4)
+
+    kolory = ["#e67e22" if w["found"] else "#c0392b" for w in ok]
+    ax2.bar(x, koszty, color=kolory)
+    ax2.set_xticks(x)
+    ax2.set_xticklabels(nazwy, rotation=20, ha="right", fontsize=8)
+    ax2.set_title("Jakość (koszt ścieżki g)")
+    ax2.grid(True, axis="y", linestyle="--", alpha=0.4)
+    for i, w in zip(x, ok):
+        if not w["found"]:
+            ax2.text(i, 0, "brak", ha="center", va="bottom",
+                     fontsize=8, color="#c0392b")
+
+    plt.tight_layout()
+    return fig
+
+
 #  SEKCJA 2. Przykładowy graf — wczytywany z pliku JSON obok app.py
 
 # Ścieżka do pliku z przykładowym grafem (w tym samym folderze co app.py).
@@ -347,6 +429,29 @@ if wyniki and wyniki["kroki"]:
         c2.metric("EFEKTYWNOŚĆ — liczba kroków", liczba_krokow)
         c3.metric("EFEKTYWNOŚĆ — rozwiniętych", liczba_rozwinietych)
         st.warning(f"Nie znaleziono ścieżki. {ostatni['komunikat']}")
+
+    st.markdown("**Porównanie strategii**")
+    st.caption("Wszystkie strategie uruchomione na tym samym grafie z tymi "
+               "samymi parametrami (start, cel, eliminacja cykli, limit).")
+    podsumowanie = porownaj_strategie(G, wyniki["start"], wyniki["goal"],
+                                      wyniki["tryb"], wyniki["limit"])
+    st.pyplot(rysuj_porownanie(podsumowanie))
+
+    wiersze = []
+    for w in podsumowanie:
+        if "blad" in w:
+            wiersze.append({"Strategia": w["nazwa"], "Kroki": "—",
+                            "Rozwinięte": "—", "Koszt g": f"błąd: {w['blad']}",
+                            "Znaleziono": "—"})
+        else:
+            wiersze.append({
+                "Strategia": w["nazwa"],
+                "Kroki": w["kroki"],
+                "Rozwinięte": w["rozwiniete"],
+                "Koszt g": w["koszt"] if w["koszt"] is not None else "—",
+                "Znaleziono": "tak" if w["found"] else "nie",
+            })
+    st.table(wiersze)
 
 # --- Zapis rozwiązania do pliku JSON---
     wynik_json = {

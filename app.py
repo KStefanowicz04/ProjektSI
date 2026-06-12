@@ -85,7 +85,7 @@ def wczytaj_przyklad():
 
 st.set_page_config(page_title="Przeszukiwanie grafu", layout="wide")
 st.title("Nauka strategii przeszukiwania grafu")
-st.caption("Aplikacja dydaktyczna — modułowe strategie przeszukiwania")
+st.caption("Aplikacja dydaktyczna - modułowe strategie przeszukiwania")
 
 # Inicjalizacja stanu sesji.
 if "dane" not in st.session_state:
@@ -100,13 +100,13 @@ if "dane" not in st.session_state:
 if "wyniki" not in st.session_state:
     st.session_state.wyniki = None
 
-# Jeśli brak jakiejkolwiek strategii — nie ma co uruchamiać.
+# Jeśli brak jakiejkolwiek strategii - nie ma co uruchamiać.
 if not STRATEGIE:
     st.error("Nie znaleziono żadnej strategii w folderze strategie/.")
     st.stop()
 
 
-#  PASEK BOCZNY — wczytanie / definiowanie grafu (wymaganie 1) i parametry (4)
+#  PASEK BOCZNY - wczytanie / definiowanie grafu (wymaganie 1) i parametry (4)
 with st.sidebar:
     st.header("1. Źródło grafu")
 
@@ -155,6 +155,41 @@ with st.sidebar:
                 st.success(f"Dodano krawędź {ce_u} → {ce_v}.")
         else:
             st.info("Dodaj najpierw co najmniej 2 wierzchołki.")
+    
+    with st.expander("Usuń wierzchołek"):
+        lista_w = list(dane.get("nodes", {}).keys())
+        if (lista_w):
+            usun_w = st.selectbox("Nazwa wierzchołka", lista_w, key="usun_w")
+            if st.button("Usuń wierzchołek"):
+                ## Wierzchołek
+                dane["nodes"].pop(usun_w, None)
+                
+                ## Krawędzie wierzchołka
+                dane["edges"] = [
+                    e for e in dane.get("edges", [])
+                    if e[0] != usun_w and e[1] != usun_w
+                ]
+
+                st.session_state.wyniki = None
+                st.success(f"Usunięto wierzchołek '{usun_w}'.")
+        else:
+            st.info("Brak wierzchołków do usunięcia.")
+        
+    with st.expander("Usuń krawędź"):
+        lista_w = list(dane.get("nodes", {}).keys())
+        if len(lista_w) >= 2:
+            ue_u = st.selectbox("Z wierzchołka", lista_w, key="ue_u")
+            ue_v = st.selectbox("Do wierzchołka", lista_w, key="ue_v")
+            if st.button("Usuń krawędź"):
+                dane["edges"] = [
+                    e for e in dane.get("edges", [])
+                    if not (e[0] == ue_u and e[1] == ue_v)
+                ]
+                st.session_state.wyniki = None
+                st.success(f"Usunięto krawędź {ue_u} → {ue_v}.")
+        else:
+            st.info("Dodaj najpierw co najmniej 2 wierzchołki.")
+                
 
     st.divider()
 

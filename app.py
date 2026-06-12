@@ -95,6 +95,7 @@ def porownaj_strategie(G, start, goal, tryb, limit):
             "kroki": ostatni["krok"],
             "rozwiniete": len(ostatni["rozwiniete"]),
             "koszt": krok_celu["g"] if krok_celu else None,
+            "dlugosc_sciezki": len(krok_celu["sciezka"]) if krok_celu else None,
             "found": krok_celu is not None,
         })
     return podsumowanie
@@ -108,10 +109,10 @@ def rysuj_porownanie(podsumowanie):
     """
     ok = [w for w in podsumowanie if "blad" not in w]
 
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(16, 4))
 
     if not ok:
-        for ax in (ax1, ax2):
+        for ax in (ax1, ax2, ax3):
             ax.text(0.5, 0.5, "Brak wyników do porównania.",
                     ha="center", va="center")
             ax.axis("off")
@@ -122,6 +123,8 @@ def rysuj_porownanie(podsumowanie):
     kroki = [w["kroki"] for w in ok]
     rozw = [w["rozwiniete"] for w in ok]
     koszty = [w["koszt"] if w["koszt"] is not None else 0 for w in ok]
+    dlugosci = [
+    w["dlugosc_sciezki"] if w["dlugosc_sciezki"] is not None else 0 for w in ok]
     x = list(range(len(nazwy)))
     szer = 0.38
 
@@ -146,6 +149,12 @@ def rysuj_porownanie(podsumowanie):
             ax2.text(i, 0, "brak", ha="center", va="bottom",
                      fontsize=8, color="#c0392b")
 
+    ax3.bar(x, dlugosci, color="#9b59b6")
+    ax3.set_xticks(x)
+    ax3.set_xticklabels(nazwy, rotation=20, ha="right", fontsize=8)
+    ax3.set_title("Długość ścieżki")
+    ax3.grid(True, axis="y", linestyle="--", alpha=0.4)
+        
     plt.tight_layout()
     return fig
 
@@ -479,7 +488,9 @@ if wyniki and wyniki["kroki"]:
                 "Kroki": w["kroki"],
                 "Rozwinięte": w["rozwiniete"],
                 "Koszt g": w["koszt"] if w["koszt"] is not None else "—",
+                "Długość ścieżki": w["dlugosc_sciezki"] if w["dlugosc_sciezki"] is not None else "—",
                 "Znaleziono": "tak" if w["found"] else "nie",
+                
             })
     st.table(wiersze)
 
